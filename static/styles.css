@@ -1,0 +1,25 @@
+/* Size for site logo */
+nav .site-logo
+{
+    font-size: xx-large;
+    text-decoration: none;
+}
+
+p, span, div, h1, button {
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: # f6f5f4;
+}
+
+.completion-checkbox: {
+    box-shadow: 0 0 5px #000000;
+}
+
+/* make nav bar buttons bold when active*/
+.navbar-nav .nav-link.active {
+    font-weight: bold;
+}
+
+

@@ -1,0 +1,318 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Agenda
+{% endblock %}
+
+{% block main %}
+<!-- Main content block for the Agenda page -->
+
+    <!-- Table for Scheduled Meetings and Appointments -->
+    <table class="table  mt-5">
+        <thead>
+            <!-- Heading for Scheduled Meetings and Appointments -->
+            <h5>
+                SCHEDULED MEETINGS, APPOINTMENTS:
+            </h5>
+            <!-- Table header columns -->
+            <tr>
+                <th> Goal Category</th>
+                <th> Task </th>
+                <th> Date and time </th>
+                <th> Remove Task </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <!-- Display existing scheduled meetings and appointments in the table -->
+            {% for task in appointments %}
+                <tr id="todo_row_{{ task.id }}" >
+                    <!-- Table row for each appointment -->
+
+                    <!-- Goal Category column with checkbox for completion -->
+                    <td class="align-middle ">
+                        <div class="d-flex align-items-center " >
+                            <div class=" col-sm-2 d-flex justify-content-center align-items-center form-check" >
+                                <!-- Hidden input to store task_id -->
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+
+                                <!-- Checkbox with value 1 when checked -->
+                                <input class="form-check-input completion-checkbox"
+                                        type="checkbox"
+                                        id="completion_{{ task.id }}"
+                                        name="task_completion"
+                                        data-task-id="{{ task.id }}"
+                                        data-completion="{{ task.completion}}"
+                                        {% if task.completion == 1 %}checked{% endif %}
+                                        onchange="updateTaskStatus(this)">
+                            </div>
+                            <!-- Label for the Goal Category -->
+                            <label class="form-check-label ms-5" for="completion_{{ task.id }}">
+                                {{ task.category }}
+                            </label>
+                        </div>
+                    </td>
+
+                    <!-- Task column -->
+                    <td class="align-middle " style="text-align: left;">{{ task.task }}</td>
+
+                    <!-- Date and time column -->
+                    <td>
+                        <div>
+                            {{ task.date or '' }}
+                        </div>
+                        <div>
+                            {{ task.time or '' }}
+                        </div>
+                    </td>
+
+                    <!-- Column for removing the task -->
+                    <td>
+                        <!-- Button to open the delete confirmation modal -->
+                        <button class="btn-close" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal_{{ task.id }}"></button>
+
+                        <!-- Delete confirmation modal -->
+                        <div class="modal fade" id="deleteConfirmationModal_{{ task.id }}" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel_{{ task.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteConfirmationModalLabel_{{ task.id }}">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete this task?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <!-- Button to submit the delete form -->
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="delete_task({{ task.id }})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+
+    <!-- WEEKDAY TASKS-->
+    <h5>
+        <!-- Heading for Weekly Tasks Table-->
+        WEEKLY TASKS:
+    </h5>
+    <span>
+        <!-- Subheading for Weekdays -->
+        WEEKDAYS:
+    </span>
+    <!-- Table for Weekday Tasks -->
+    <table class="table  mt-5">
+        <thead>
+            <!-- Table header columns for Weekday Tasks -->
+            <tr>
+                <th> Goal Category</th>
+                <th> Task </th>
+                <th> Timeframe </th>
+                <th> Remove Task </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <!-- Display existing tasks for weekdays in the table -->
+            {% for task in weekdays %}
+                <tr id="todo_row_{{ task.id }}" >
+                    <!-- Table row for each weekday task -->
+
+                    <!-- Goal Category column with checkbox for completion -->
+                    <td class="align-middle ">
+                        <div class="d-flex align-items-center " >
+                            <div class=" col-sm-2 d-flex justify-content-center align-items-center form-check" >
+                                <!-- Hidden input to store task_id -->
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+
+                                <!-- Checkbox with value 1 when checked -->
+                                <input class="form-check-input completion-checkbox"
+                                        type="checkbox"
+                                        id="completion_{{ task.id }}"
+                                        name="task_completion"
+                                        data-task-id="{{ task.id }}"
+                                        data-completion="{{ task.completion}}"
+                                        {% if task.completion == 1 %}checked{% endif %}
+                                        onchange="updateTaskStatus(this)">
+                            </div>
+                            <!-- Label for the Goal Category -->
+                            <label class="form-check-label ms-5" for="completion_{{ task.id }}">
+                                {{ task.category }}
+                            </label>
+                        </div>
+                    </td>
+
+                    <!-- Task column -->
+                    <td class="align-middle " style="text-align: left;">{{ task.task }}</td>
+
+                    <!-- Timeframe column -->
+                    <td>
+                        <div>
+                            {{ task.timeframe or '' }}
+                        </div>
+                    </td>
+
+                    <!-- Column for removing the task -->
+                    <td>
+                        <!-- Button to open the delete confirmation modal -->
+                        <button class="btn-close" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal_{{ task.id }}"></button>
+
+                        <!-- Delete confirmation modal -->
+                        <div class="modal fade" id="deleteConfirmationModal_{{ task.id }}" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel_{{ task.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteConfirmationModalLabel_{{ task.id }}">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete this task?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <!-- Button to submit the delete form -->
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="delete_task({{ task.id }})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+
+    <!-- WEEKEND TASKS-->
+    <span>
+        <!-- Subheading for Weekends -->
+        WEEKENDS:
+    </span>
+    <!-- Table for Weekend Tasks -->
+    <table class="table  mt-5">
+        <thead>
+            <!-- Table header columns for Weekend Tasks -->
+            <tr>
+                <th> Goal Category</th>
+                <th> Task </th>
+                <th> Timeframe </th>
+                <th> Remove Task </th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <!-- Display existing tasks for weekends in the table -->
+            {% for task in weekends %}
+                <tr id="todo_row_{{ task.id }}" >
+                    <!-- Table row for each weekend task -->
+
+                    <!-- Goal Category column with checkbox for completion -->
+                    <td class="align-middle">
+                        <div class="d-flex align-items-center " >
+                            <div class=" col-sm-2 d-flex justify-content-center align-items-center form-check" >
+                                <!-- Hidden input to store task_id -->
+                                <input type="hidden" name="task_id" value="{{ task.id }}">
+
+                                <!-- Checkbox with value 1 when checked -->
+                                <input class="form-check-input completion-checkbox"
+                                        type="checkbox"
+                                        id="completion_{{ task.id }}"
+                                        name="task_completion"
+                                        data-task-id="{{ task.id }}"
+                                        data-completion="{{ task.completion}}"
+                                        {% if task.completion == 1 %}checked{% endif %}
+                                        onchange="updateTaskStatus(this)">
+                            </div>
+                            <!-- Label for the Goal Category -->
+                            <label class="form-check-label ms-5" for="completion_{{ task.id }}">
+                                {{ task.category }}
+                            </label>
+                        </div>
+                    </td>
+
+                    <!-- Task column -->
+                    <td class="align-middle " style="text-align: left;">{{ task.task }}</td>
+
+                    <!-- Timeframe column -->
+                    <td>
+                        <div>
+                            {{ task.timeframe or '' }}
+                        </div>
+                    </td>
+
+                    <!-- Column for removing the task -->
+                    <td>
+                        <!-- Button to open the delete confirmation modal -->
+                        <button class="btn-close" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal_{{ task.id }}"></button>
+
+                        <!-- Delete confirmation modal -->
+                        <div class="modal fade" id="deleteConfirmationModal_{{ task.id }}" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel_{{ task.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteConfirmationModalLabel_{{ task.id }}">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete this task?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <!-- Button to submit the delete form -->
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="delete_task({{ task.id }})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- JavaScript script for updating task status and deleting tasks -->
+    <script>
+        function updateTaskStatus(checkbox) {
+            const taskId = checkbox.getAttribute("data-task-id");
+            const newCompletionValue = checkbox.checked ? 1 : 0;
+
+            // Send asynchronous request to the server
+            fetch(`/update_task_status/${taskId}/${newCompletionValue}`, {
+                method: 'POST',
+            }) .then(response => {
+                if (response.ok) {
+                    // If the request is successful, hide the task on the client side
+                    const row = document.querySelector(`#todo_row_${taskId}`);
+                    row.style.display = 'none';
+            }
+            });
+        }
+
+        // Function to delete a completed task
+        function delete_task(taskId) {
+
+            // Send asynchronous request to the server
+            fetch(`/delete_task/${taskId}`, {
+                method: 'DELETE',
+            });
+
+            // Remove the corresponding row from the table
+            const row = document.querySelector(`#todo_row_${taskId}`);
+            row.remove();
+        }
+    </script>
+
+    <!-- Image at the bottom of the page -->
+    <img src="/static/agenda.png" class="wide-image">
+{% endblock %}
+
+

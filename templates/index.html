@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+<!-- HTML form for adding a new task -->
+<div class="container container-fluid mt-3">
+    <form method="POST" action="/add_task" class="mx-auto text-center mb-5" style="background-color: #f2f2f2; padding: 20px; border-radius: 10px; width: 60%;">
+
+        <!-- Header for the form -->
+        <div class="col-sm-5 mx-auto">
+            <label><b>Add a new task:</b></label>
+        </div>
+        <!-- Task and Category input fields -->
+        <div class="mb-3 row mt-3">
+            <!-- Input Category -->
+            <div class="col-sm-6">
+                <!-- Category input with dropdown -->
+                <div class="input-group">
+                    <input type="text" id="category" name="category" class="form-control" placeholder="Enter a new category" autocomplete="off" aria-label="Text input with dropdown button">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                    <!-- Dropdown menu for category suggestions -->
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <!-- Loop through tasks to provide existing category list-->
+                        {% for task in task_categories %}
+                            <li value="{{ task.category }}">
+                                <a class="dropdown-item" href="#" onclick="setCategory('{{ task.category }}')">
+                                    {{ task.category }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <!-- Input Task -->
+            <div class="col-sm-6 mx-auto">
+                <label class="visually-hidden" for="task">Task</label>
+                <input type="text" class="form-control" id="task" name="task" placeholder="Enter a new task" autocomplete="off" required>
+            </div>
+        </div>
+
+        <!-- Priority selection -->
+        <div class="mb-3 row">
+            <!-- Input Priority -->
+            <div class="col-sm-5 mx-auto">
+                <!-- Priority dropdown -->
+                <label class="visually-hidden" for="priority">Select Priority</label>
+                <select class="form-select" id="priority" name="priority" required>
+                    <option selected disabled>Priority</option>
+                    <option value="High">High</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+
+            <!-- Input Timeframe -->
+            <div class="col-sm-7 mx-auto">
+                <!-- Label for selecting a possible timeframe -->
+                <label class="visually-hidden" for="timeframe">Possible Timeframe</label>
+                <!-- Dropdown for selecting a possible timeframe -->
+                <select class="form-select" id="timeframe" name="timeframe" required>
+                    <option selected disabled>Possible Timeframe</option>
+                    <option value="Mon - Fri (morning)">Mon - Fri (morning)</option>
+                    <option value="Mon - Fri (noon)">Mon - Fri (noon)</option>
+                    <option value="Mon - Fri (evening)">Mon - Fri (evening)</option>
+                    <option value="Sat - Sun">Sat - Sun</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Specify date and time if needed -->
+        <div class="mb-3 row">
+            <!-- Label for specifying the date -->
+            <label for="date" class="col-sm-4 col-form-label text-end">Specify date and time if needed:</label>
+            <!-- Input field for specifying the date -->
+            <div class="col-sm-4 mx-auto">
+                <input type="date" class="form-control" id="date" name="date" autocomplete="off">
+            </div>
+
+            <!-- Input field for specifying the TIME -->
+            <div class="col-sm-4 mx-auto">
+                <input type="time" class="form-control" id="time" name="time" autocomplete="off">
+            </div>
+        </div>
+
+        <!-- Submit button -->
+        <div class="mb-3 row">
+            <!-- Button to Submit the form -->
+            <div class="col-sm-4 mx-auto">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<!-- DISPLAY A TABLE TO SHOW TASKS -->
+<table class="table">
+    <thead>
+        <!-- Table header with column names -->
+        <tr>
+            <th> Goal Category</th>
+            <th> Task </th>
+            <th> Possible Timeframe </th>
+            <th> Specific date </th>
+            <th> Specific time </th>
+            <th> Priority </th>
+            <th> Remove Task </th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Loop through tasks and Display each task in the table row -->
+        {% for task in tasks %}
+            <tr id="todo_row_{{ task.id }}" >
+                <!-- Goal Category -->
+                <td class="align-middle " style="text-align: left;">
+                    <!-- Task completion checkbox and label -->
+                    <div class="d-flex align-items-center " >
+                        <div class=" col-sm-2 d-flex justify-content-center align-items-center form-check" >
+                            <!-- Hidden input to store task_id -->
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+
+                            <!-- Checkbox with value 1 when checked -->
+                            <input class="form-check-input completion-checkbox"
+                                    type="checkbox"
+                                    id="completion_{{ task.id }}"
+                                    name="task_completion"
+                                    data-task-id="{{ task.id }}"
+                                    data-completion="{{ task.completion}}"
+                                    {% if task.completion == 1 %}checked{% endif %}
+                                    onchange="updateTaskStatus(this)">
+
+                        </div>
+                        <!-- Label for the completion checkbox -->
+                        <label class="form-check-label ms-5" for="completion_{{ task.id }}">
+                            {{ task.category }}
+                        </label>
+                    </div>
+                </td>
+
+                <!-- Tasks Details -->
+                <td style="text-align: left;">{{ task.task }}</td>
+                <td>{{ task.timeframe if (task.date is none or task.date =='') and task.timeframe is not none else '' }}</td>
+                <td>{{ task.date or '' }}</td>
+                <td>{{ task.time or '' }}</td>
+                <td>
+                    <button class="btn btn-primary {{ 'btn-success' if (task.priority or 'Low') == 'Low' else '' }}" onclick="changePriority({{ task.id }}, this)">{{ task.priority or 'Low' }}</button>
+                </td>
+
+                <!-- Remove Task -->
+                <td>
+                    <!-- Button to open the delete confirmation modal -->
+                    <button class="btn-close" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal_{{ task.id }}"></button>
+
+                    <!-- Delete confirmation modal -->
+                    <div class="modal fade" id="deleteConfirmationModal_{{ task.id }}" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel_{{ task.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteConfirmationModalLabel_{{ task.id }}">Confirm Deletion</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete this task?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <!-- Button to submit the delete form -->
+                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="delete_task({{ task.id }})">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<!-- JavaScript for handling task status updates and deletions -->
+<script>
+    // Function to set the category in the form
+    function setCategory(category) {
+        const input = document.querySelector('#category');
+        input.value = category;
+    }
+
+
+    // Function to update the completion status of a task
+    function updateTaskStatus(checkbox) {
+        // Get the task ID and new completion value from the checkbox attributes:
+        const taskId = checkbox.getAttribute("data-task-id");
+        const newCompletionValue = checkbox.checked ? 1 : 0;
+
+        // Send an asynchronous request to the server to update the task status
+        fetch(`/update_task_status/${taskId}/${newCompletionValue}`, {
+            method: 'POST',
+        }) .then(response => {
+            if (response.ok) {
+                // If the request is successful, hide the task on the client side:
+                const row = document.querySelector(`#todo_row_${taskId}`);
+                row.style.display = 'none';
+            }
+        });
+    }
+
+
+    // Function to delete a task
+    function delete_task(taskId) {
+
+        // Send an asynchronous request to the server to delete the task
+        fetch(`/delete_task/${taskId}`, {
+            method: 'DELETE',
+        });
+
+        // Remove the corresponding row from the HTML table on the client side
+        const row = document.querySelector(`#todo_row_${taskId}`);
+        row.remove();
+    }
+
+
+    // Function to change task priority
+    function changePriority(taskId, button) {
+
+        const newPriority = button.textContent === 'Low' ? 'High' : 'Low';
+
+        // Send an asynchronous request to the server to update the task priority
+        fetch(`/update_task_priority/${taskId}/${newPriority}`, {
+            method: 'POST',
+        }) .then(response => {
+            if (response.ok) {
+                // If the request is successful, update the task priority on the client side:
+                button.textContent = newPriority;
+                button.classList.toggle('btn-success')
+            }
+        });
+    }
+</script>
+
+<!-- Display an image -->
+<img src="/static/planning2.png" class="wide-image">
+{% endblock %}
+
+
